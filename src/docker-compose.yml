@@ -8,6 +8,8 @@ services:
       - "80:80"
     volumes:
       - ./web:/var/www/html
+    networks:
+      - inception
 
   wordpress:
     container_name: wp-php
@@ -16,10 +18,20 @@ services:
       context: requirements/wordpress
     volumes:
       - ./web:/var/www/html
+    networks:
+      - inception
 
   maria_db:
     container_name: mariadb
     image: mariadb_image
     build:
       context: requirements/mariadb
+    volumes:
+      - ./database:/var/lib/mysql
+    networks:
+      - inception
+
+networks:
+  inception:
+    driver: bridge
     
