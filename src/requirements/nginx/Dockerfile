@@ -5,7 +5,7 @@ FROM debian:bullseye-slim
 RUN apt-get update && apt-get install -y nginx openssl curl && rm -rf /var/lib/apt/lists/*
 
 # Copiamos la configuración personalizada de nginx
-#COPY conf/nginx.conf /etc/nginx/nginx.conf
+COPY conf/default /etc/nginx/sites-available/default
 
 # Exponemos el puerto 443 para HTTPS
 #EXPOSE 443

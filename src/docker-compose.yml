@@ -6,9 +6,20 @@ services:
       context: requirements/nginx
     ports:
       - "80:80"
+    volumes:
+      - ./web:/var/www/html
 
   wordpress:
     container_name: wp-php
     image: wordpress_image
     build:
       context: requirements/wordpress
+    volumes:
+      - ./web:/var/www/html
+
+  maria_db:
+    container_name: mariadb
+    image: mariadb_image
+    build:
+      context: requirements/mariadb
+    
