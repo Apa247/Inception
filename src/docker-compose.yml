@@ -1,0 +1,14 @@
+services:
+  nginx:
+    container_name: nginx
+    image: nginx_image
+    build:
+      context: requirements/nginx
+    ports:
+      - "80:80"
+
+  wordpress:
+    container_name: wp-php
+    image: wordpress_image
+    build:
+      context: requirements/wordpress
