@@ -1,12 +1,15 @@
-FROM debian:bookworm-slim
+FROM debian:bullseye-slim
 
 # Actualizar e instalar dependencias necesarias
 RUN apt-get update && apt-get install -y \
-    php-fpm \
-    php-mysqli \
+    php7.4-fpm \
+    php7.4-mysqli \
     curl
 
-COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
+EXPOSE 9000
+
+COPY conf/www.conf /etc/php/7.4/fpm/pool.d/www.conf
+
 
 COPY tools/script.sh .
 RUN chmod +x script.sh

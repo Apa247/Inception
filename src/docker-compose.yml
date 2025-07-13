@@ -1,37 +1,140 @@
 services:
   nginx:
     container_name: nginx
-    image: nginx_image
-    build:
-      context: requirements/nginx
+    build: ./requirements/nginx
     ports:
-      - "80:80"
+      - "443:443"
     volumes:
-      - ./web:/var/www/html
+      - web_volumen:/var/www/html
+    depends_on:
+      wordpress:
+        condition: service_healthy
+    restart: always
     networks:
       - inception
 
   wordpress:
     container_name: wp-php
-    image: wordpress_image
-    build:
-      context: requirements/wordpress
+    build: ./requirements/wordpress
     volumes:
-      - ./web:/var/www/html
+      - web_volumen:/var/www/html
+    depends_on:
+      maria_db:
+        condition: service_healthy
+    healthcheck:
+      test: pgrep php-fpm7.4
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+      start_interval: 5s
+    restart: always
+    secrets:
+      - DB_NAME
+      - DB_USER
+      - DB_USER_PWD
+      - DB_MASTER_USER
+      - DB_MASTER_PWD
+      - WP_MASTER_USER
+      - WP_MASTER_PWD
+      - WP_MASTER_EMAIL
+      - WP_USER
+      - WP_USER_PWD
+      - WP_USER_EMAIL
+    environment:
+      - DB_NAME_FILE=/run/secrets/DB_NAME
+      - DB_USER_FILE=/run/secrets/DB_USER
+      - DB_USER_PWD_FILE=/run/secrets/DB_USER_PWD
+      - DB_MASTER_USER_FILE=/run/secrets/DB_MASTER_USER
+      - DB_MASTER_PWD_FILE=/run/secrets/DB_MASTER_PWD
+      - WP_MASTER_USER_FILE=/run/secrets/WP_MASTER_USER
+      - WP_MASTER_PWD_FILE=/run/secrets/WP_MASTER_PWD
+      - WP_MASTER_EMAIL_FILE=/run/secrets/WP_MASTER_EMAIL
+      - WP_USER_FILE=/run/secrets/WP_USER
+      - WP_USER_PWD_FILE=/run/secrets/WP_USER_PWD
+      - WP_USER_EMAIL_FILE=/run/secrets/WP_USER_EMAIL
+    ports:
+      - "9000:9000"
     networks:
       - inception
 
   maria_db:
     container_name: mariadb
-    image: mariadb_image
-    build:
-      context: requirements/mariadb
+    build: ./requirements/mariadb
     volumes:
-      - ./database:/var/lib/mysql
+      - Mariadb_volumen:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-p$DB_ROOT_PWD"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+      start_interval: 5s
+    restart: always
+    secrets:
+      - DB_NAME
+      - DB_USER
+      - DB_USER_PWD
+      - DB_MASTER_USER
+      - DB_MASTER_PWD
+      - DB_ROOT_PWD
+    environment:
+      - DB_MASTER_PWD_FILE=/run/secrets/DB_MASTER_PWD
+      - DB_MASTER_USER_FILE=/run/secrets/DB_MASTER_USER
+      - DB_USER_FILE=/run/secrets/DB_USER
+      - DB_USER_PWD_FILE=/run/secrets/DB_USER_PWD
+      - DB_NAME_FILE=/run/secrets/DB_NAME
+      - DB_ROOT_PWD_FILE=/run/secrets/DB_ROOT_PWD
+    ports:
+      - "3306:3306"
     networks:
       - inception
+
+volumes:
+  web_volumen:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/daparici/data/wordpress
+      o: bind
+  Mariadb_volumen:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/daparici/data/mariadb
+      o: bind
 
 networks:
   inception:
     driver: bridge
+
+secrets:
+  DB_NAME:
+    file: ../secrets/DB_NAME.txt
+  DB_USER_PWD:
+    file: ../secrets/DB_USER_PWD.txt
+  DB_USER:
+    file: ../secrets/DB_USER.txt
+  DB_MASTER_USER:
+    file: ../secrets/DB_MASTER_USER.txt
+  DB_MASTER_PWD:
+    file: ../secrets/DB_MASTER_PWD.txt
+  DB_ROOT_PWD:
+    file: ../secrets/DB_ROOT_PWD.txt
+  WP_MASTER_USER:
+    file: ../secrets/WP_MASTER_USER.txt
+  WP_MASTER_PWD:
+    file: ../secrets/WP_MASTER_PWD.txt
+  WP_MASTER_EMAIL:
+    file: ../secrets/WP_MASTER_EMAIL.txt
+  WP_USER:
+    file: ../secrets/WP_USER.txt
+  WP_USER_PWD:
+    file: ../secrets/WP_USER_PWD.txt
+  WP_USER_EMAIL:
+    file: ../secrets/WP_USER_EMAIL.txt
+  
+
+
+
     
