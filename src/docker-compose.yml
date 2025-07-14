@@ -64,7 +64,7 @@ services:
     volumes:
       - Mariadb_volumen:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-p$DB_ROOT_PWD"]
+      test: ["CMD", "./healthcheck.sh"]
       interval: 5s
       timeout: 5s
       retries: 10

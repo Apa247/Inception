@@ -12,7 +12,11 @@ COPY tools/mariadb.cnf /etc/mysql/mariadb.cnf
 #COPY tools/init.sql /etc/mysql/init.sql
 
 COPY tools/script.sh .
+# SOLUCIÓN HEALTHCHECK: Copiar el script de healthcheck personalizado
+# Este script resuelve el problema de "Access denied" leyendo la contraseña
+# directamente del archivo de secreto en lugar de usar variables de entorno
+COPY tools/healthcheck.sh .
 
-RUN mkdir /run/mysqld && chmod +x script.sh
+RUN mkdir /run/mysqld && chmod +x script.sh && chmod +x healthcheck.sh
 
 CMD ["./script.sh"]
