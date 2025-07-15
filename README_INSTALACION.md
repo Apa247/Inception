@@ -22,11 +22,13 @@ chmod +x setup_dependencies.sh
 
 **Incluye:**
 - ✅ Docker y Docker Compose
+- ✅ Docker Swarm inicializado
 - ✅ Dependencias básicas del sistema
 - ✅ Herramientas de desarrollo
 - ✅ Configuración de directorios
 - ✅ Aliases útiles
 - ✅ Verificación completa de instalación
+- ✅ Configuración de sudo sin contraseña
 - ✅ Oh My Bash (opcional)
 
 ### Opción 2: Instalación Rápida
@@ -41,8 +43,10 @@ chmod +x quick_setup.sh
 
 **Incluye:**
 - ✅ Docker y Docker Compose
+- ✅ Docker Swarm inicializado
 - ✅ Dependencias básicas
 - ✅ Configuración mínima
+- ✅ Sudo sin contraseña
 
 ## 📦 Dependencias Instaladas
 
@@ -50,6 +54,7 @@ chmod +x quick_setup.sh
 - **Docker Engine** (última versión estable)
 - **Docker Compose** (latest)
 - **Docker Buildx Plugin**
+- **Docker Swarm** (inicializado automáticamente)
 
 ### Herramientas del Sistema
 - `curl`, `wget`, `git`
@@ -142,30 +147,62 @@ sudo chown -R $USER:$USER /home/$USER/data
 chmod -R 755 /home/$USER/data
 ```
 
-### Docker Compose no se encuentra
+### Error de Docker Swarm al crear secrets
 ```bash
-# Verificar instalación
-which docker-compose
+# Verificar estado de Docker Swarm
+docker info | grep Swarm
 
-# Reinstalar si es necesario
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+# Si no está activo, inicializarlo manualmente
+docker swarm init
+
+# Si hay problema con múltiples IPs
+docker swarm init --advertise-addr <tu-ip-principal>
+
+# Verificar que funciona
+docker node ls
 ```
+
+### Configuración sudo sin contraseña no funciona
+```bash
+# Verificar si el archivo existe
+sudo ls -la /etc/sudoers.d/$USER
+
+# Verificar contenido
+sudo cat /etc/sudoers.d/$USER
+
+# Probar manualmente
+sudo visudo -c -f /etc/sudoers.d/$USER
+```
+
+### Revertir configuración sudo sin contraseña
+```bash
+# Si quieres volver a pedir contraseña para sudo
+sudo rm /etc/sudoers.d/$USER
+```
+
+## 🔒 Consideraciones de Seguridad
+
+- **Sudo sin contraseña**: Útil para desarrollo, pero evalúa si es apropiado para tu entorno
+- **Grupo docker**: Los usuarios del grupo docker tienen acceso root equivalente
+- **Firewall**: Considera mantener ufw activo con reglas específicas
+- **Actualizaciones**: Mantén el sistema y Docker actualizados regularmente
 
 ## 📝 Notas Importantes
 
 1. **Reinicio obligatorio**: Después de la instalación, DEBES reiniciar tu sesión para que los cambios del grupo docker tengan efecto.
 
-2. **Firewall**: Ubuntu 22.04 viene con ufw habilitado por defecto. Si tienes problemas de conectividad, verifica:
+2. **Configuración de sudo**: Los scripts configuran tu usuario para ejecutar comandos sudo sin contraseña. Esto es útil para desarrollo pero considéralo para entornos de producción.
+
+3. **Firewall**: Ubuntu 22.04 viene con ufw habilitado por defecto. Si tienes problemas de conectividad, verifica:
    ```bash
    sudo ufw status
    sudo ufw allow 443/tcp  # Para HTTPS
    sudo ufw allow 80/tcp   # Para HTTP (si necesario)
    ```
 
-3. **Espacio en disco**: Asegúrate de tener al menos 10GB libres para las imágenes de Docker y el proyecto.
+4. **Espacio en disco**: Asegúrate de tener al menos 10GB libres para las imágenes de Docker y el proyecto.
 
-4. **Memoria RAM**: Se recomienda al menos 2GB de RAM para ejecutar todos los contenedores cómodamente.
+5. **Memoria RAM**: Se recomienda al menos 2GB de RAM para ejecutar todos los contenedores cómodamente.
 
 ## 🆘 Soporte
 

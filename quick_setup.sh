@@ -36,10 +36,35 @@ echo "🚀 Iniciando Docker..."
 sudo systemctl enable docker
 sudo systemctl start docker
 
+# Inicializar Docker Swarm
+echo "🐝 Inicializando Docker Swarm..."
+if ! docker info | grep -q "Swarm: active"; then
+    # Obtener la IP principal del sistema
+    HOST_IP=$(ip route get 8.8.8.8 | awk '{print $7; exit}')
+    
+    if [ -z "$HOST_IP" ]; then
+        echo "⚠️  No se pudo detectar la IP automáticamente, usando 127.0.0.1"
+        HOST_IP="127.0.0.1"
+    fi
+    
+    echo "📍 Inicializando swarm con IP: $HOST_IP"
+    docker swarm init --advertise-addr $HOST_IP
+    echo "✅ Docker Swarm inicializado"
+else
+    echo "ℹ️  Docker Swarm ya está activo"
+fi
+
 # Crear directorios
 echo "📁 Creando directorios..."
 mkdir -p /home/$USER/data/{wordpress,mariadb}
 
+# Configurar sudo sin contraseña para el usuario actual
+echo "🔐 Configurando sudo sin contraseña..."
+echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$USER > /dev/null
+sudo chmod 0440 /etc/sudoers.d/$USER
+
 echo "✅ ¡Instalación completada!"
 echo "⚠️  IMPORTANTE: Ejecuta 'newgrp docker' o reinicia tu sesión"
 echo "🔍 Verifica con: docker --version && docker-compose --version"
+echo "� Docker Swarm inicializado y listo para usar secrets"
+echo "�🔓 Tu usuario ahora puede ejecutar sudo sin contraseña"

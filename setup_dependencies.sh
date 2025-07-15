@@ -127,6 +127,29 @@ configure_docker() {
     sudo systemctl start docker
     
     log "✅ Docker configurado"
+    
+    # Inicializar Docker Swarm
+    log "Inicializando Docker Swarm..."
+    if ! docker info | grep -q "Swarm: active"; then
+        # Obtener la IP principal del sistema
+        HOST_IP=$(ip route get 8.8.8.8 | awk '{print $7; exit}' 2>/dev/null)
+        
+        if [ -z "$HOST_IP" ]; then
+            warning "No se pudo detectar la IP automáticamente, usando 127.0.0.1"
+            HOST_IP="127.0.0.1"
+        fi
+        
+        log "Inicializando swarm con IP: $HOST_IP"
+        if docker swarm init --advertise-addr $HOST_IP; then
+            log "✅ Docker Swarm inicializado correctamente"
+        else
+            error "❌ Error al inicializar Docker Swarm"
+            exit 1
+        fi
+    else
+        log "ℹ️  Docker Swarm ya está activo"
+    fi
+    
     info "📝 Nota: Necesitarás reiniciar la sesión o hacer logout/login para que los cambios del grupo docker tengan efecto"
 }
 
@@ -179,6 +202,13 @@ verify_installation() {
         exit 1
     fi
     
+    # Verificar Docker Swarm
+    if docker info | grep -q "Swarm: active"; then
+        log "✅ Docker Swarm está activo"
+    else
+        warning "⚠️  Docker Swarm no está activo"
+    fi
+    
     # Verificar que el usuario está en el grupo docker
     if groups $USER | grep -q docker; then
         log "✅ Usuario $USER está en el grupo docker"
@@ -205,6 +235,34 @@ setup_project_directories() {
     chmod -R 755 "$DATA_DIR"
     
     log "✅ Directorios del proyecto configurados"
+}
+
+# Configurar sudo sin contraseña
+configure_sudo_nopasswd() {
+    log "Configurando sudo sin contraseña para el usuario actual..."
+    
+    # Crear archivo sudoers para el usuario actual
+    SUDOERS_FILE="/etc/sudoers.d/$USER"
+    
+    # Verificar si ya existe la configuración
+    if sudo test -f "$SUDOERS_FILE"; then
+        log "ℹ️  Configuración sudo sin contraseña ya existe para $USER"
+    else
+        # Crear regla sudo sin contraseña
+        echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee "$SUDOERS_FILE" > /dev/null
+        
+        # Establecer permisos correctos (muy importante para sudoers)
+        sudo chmod 0440 "$SUDOERS_FILE"
+        
+        # Verificar que la sintaxis es correcta
+        if sudo visudo -c -f "$SUDOERS_FILE"; then
+            log "✅ Sudo sin contraseña configurado correctamente para $USER"
+        else
+            error "❌ Error en la configuración de sudoers"
+            sudo rm -f "$SUDOERS_FILE"
+            exit 1
+        fi
+    fi
 }
 
 # Instalar herramientas adicionales útiles
@@ -269,7 +327,9 @@ show_final_info() {
     info "═══════════════════════════════════════════════════════════════════"
     echo
     info "✅ Docker y Docker Compose han sido instalados"
+    info "✅ Docker Swarm inicializado"
     info "✅ Usuario agregado al grupo docker"
+    info "✅ Sudo sin contraseña configurado"
     info "✅ Directorios del proyecto configurados"
     info "✅ Aliases útiles creados"
     echo
@@ -308,6 +368,7 @@ main() {
     install_docker_compose
     verify_installation
     setup_project_directories
+    configure_sudo_nopasswd
     install_additional_tools
     create_useful_aliases
     show_final_info
