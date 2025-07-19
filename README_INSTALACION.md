@@ -23,6 +23,7 @@ chmod +x setup_dependencies.sh
 **Incluye:**
 - ✅ Docker y Docker Compose
 - ✅ Docker Swarm inicializado
+- ✅ Visual Studio Code
 - ✅ Dependencias básicas del sistema
 - ✅ Herramientas de desarrollo
 - ✅ Configuración de directorios
@@ -44,6 +45,7 @@ chmod +x quick_setup.sh
 **Incluye:**
 - ✅ Docker y Docker Compose
 - ✅ Docker Swarm inicializado
+- ✅ Visual Studio Code
 - ✅ Dependencias básicas
 - ✅ Configuración mínima
 - ✅ Sudo sin contraseña
@@ -61,6 +63,10 @@ chmod +x quick_setup.sh
 - `make`, `vim`
 - `net-tools`, `htop`, `tree`
 - `build-essential`, `jq`
+
+### Editores y IDEs
+- **Visual Studio Code** (latest estable)
+- Extensiones recomendadas instalables posteriormente
 
 ### Estructura de Directorios
 ```
@@ -86,8 +92,14 @@ newgrp docker
 docker --version
 docker-compose --version
 
+# Verificar Visual Studio Code
+code --version
+
 # Probar Docker
 docker run hello-world
+
+# Abrir VS Code
+code .
 ```
 
 ### 3. Clonar y Ejecutar Proyecto
@@ -117,12 +129,17 @@ dlog        # docker logs
 dstop       # docker stop $(docker ps -q)
 dclean      # docker system prune -af
 
+# Aliases de Visual Studio Code
+c           # code
+c.          # code .
+
 # Aliases del proyecto Inception
 inception-up      # Levantar el proyecto
 inception-down    # Parar el proyecto
 inception-logs    # Ver logs
 inception-clean   # Limpiar proyecto
 inception-status  # Ver estado
+inception-code    # Abrir proyecto en VS Code
 ```
 
 ## 🛠️ Solución de Problemas

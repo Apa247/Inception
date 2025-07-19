@@ -18,6 +18,22 @@ sudo apt update -y && sudo apt upgrade -y
 echo "🔧 Instalando dependencias básicas..."
 sudo apt install -y curl wget git make vim
 
+# Instalar Visual Studio Code
+echo "💻 Instalando Visual Studio Code..."
+# Agregar la clave GPG de Microsoft
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+
+# Actualizar e instalar VS Code
+sudo apt update -y
+sudo apt install -y code
+
+# Limpiar archivo temporal
+rm -f packages.microsoft.gpg
+
+echo "✅ Visual Studio Code instalado"
+
 # Instalar Docker
 echo "🐳 Instalando Docker..."
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -66,5 +82,6 @@ sudo chmod 0440 /etc/sudoers.d/$USER
 echo "✅ ¡Instalación completada!"
 echo "⚠️  IMPORTANTE: Ejecuta 'newgrp docker' o reinicia tu sesión"
 echo "🔍 Verifica con: docker --version && docker-compose --version"
-echo "� Docker Swarm inicializado y listo para usar secrets"
-echo "�🔓 Tu usuario ahora puede ejecutar sudo sin contraseña"
+echo "🐝 Docker Swarm inicializado y listo para usar secrets"
+echo "🔓 Tu usuario ahora puede ejecutar sudo sin contraseña"
+echo "💻 Visual Studio Code instalado - ejecuta 'code' para abrir"

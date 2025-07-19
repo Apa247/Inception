@@ -265,17 +265,42 @@ configure_sudo_nopasswd() {
     fi
 }
 
-# Instalar herramientas adicionales útiles
-install_additional_tools() {
-    log "Instalando herramientas adicionales..."
+# Instalar herramientas de desarrollo
+install_development_tools() {
+    log "Instalando herramientas de desarrollo..."
     
-    # Instalar herramientas de desarrollo
+    # Instalar herramientas básicas de desarrollo
     sudo apt install -y \
         build-essential \
         jq \
         httpie \
         ncdu \
         btop
+    
+    # Instalar Visual Studio Code
+    log "Instalando Visual Studio Code..."
+    
+    # Agregar la clave GPG de Microsoft
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+    sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+    
+    # Agregar repositorio de VS Code
+    sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+    
+    # Actualizar e instalar VS Code
+    sudo apt update -y
+    sudo apt install -y code
+    
+    # Limpiar archivos temporales
+    rm -f packages.microsoft.gpg
+    
+    log "✅ Visual Studio Code instalado"
+    log "✅ Herramientas de desarrollo instaladas"
+}
+
+# Instalar herramientas adicionales útiles
+install_additional_tools() {
+    log "Instalando herramientas adicionales..."
     
     # Instalar Oh My Bash (opcional, para mejorar la experiencia de terminal)
     read -p "¿Deseas instalar Oh My Bash para mejorar la terminal? (y/N): " -n 1 -r
@@ -306,12 +331,17 @@ alias dlog='docker logs'
 alias dstop='docker stop $(docker ps -q)'
 alias dclean='docker system prune -af'
 
+# Aliases para Visual Studio Code
+alias c='code'
+alias c.='code .'
+
 # Aliases para el proyecto Inception
 alias inception-up='cd ~/campus42/proyectos/inception/inceptio_apa && make up'
 alias inception-down='cd ~/campus42/proyectos/inception/inceptio_apa && make down'
 alias inception-logs='cd ~/campus42/proyectos/inception/inceptio_apa && make logs'
 alias inception-clean='cd ~/campus42/proyectos/inception/inceptio_apa && make clean'
 alias inception-status='cd ~/campus42/proyectos/inception/inceptio_apa && make ps'
+alias inception-code='cd ~/campus42/proyectos/inception/inceptio_apa && code .'
 EOF
     
     log "✅ Aliases creados en $ALIASES_FILE"
@@ -328,6 +358,7 @@ show_final_info() {
     echo
     info "✅ Docker y Docker Compose han sido instalados"
     info "✅ Docker Swarm inicializado"
+    info "✅ Visual Studio Code instalado"
     info "✅ Usuario agregado al grupo docker"
     info "✅ Sudo sin contraseña configurado"
     info "✅ Directorios del proyecto configurados"
@@ -349,8 +380,10 @@ show_final_info() {
     info "   1. Reinicia tu sesión o ejecuta: newgrp docker"
     info "   2. Ejecuta: docker --version"
     info "   3. Ejecuta: docker-compose --version"
-    info "   4. Clona tu proyecto Inception"
-    info "   5. Ejecuta: make up"
+    info "   4. Ejecuta: code --version"
+    info "   5. Clona tu proyecto Inception"
+    info "   6. Abre VS Code: code ."
+    info "   7. Ejecuta: make up"
     echo
     info "═══════════════════════════════════════════════════════════════════"
 }
@@ -363,6 +396,7 @@ main() {
     check_ubuntu_version
     update_system
     install_basic_dependencies
+    install_development_tools
     install_docker
     configure_docker
     install_docker_compose
