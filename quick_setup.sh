@@ -4,11 +4,18 @@
 # SCRIPT DE INSTALACIÓN RÁPIDA - PROYECTO INCEPTION
 # ==============================================================================
 # Versión simplificada para instalación rápida de dependencias esenciales
+# Compatible con Ubuntu 24.04 LTS y 22.04 LTS
 # ==============================================================================
 
 set -e
 
 echo "🚀 Instalación rápida de dependencias para Inception..."
+
+# Detectar versión de Ubuntu
+if [[ -f /etc/os-release ]]; then
+    source /etc/os-release
+    echo "🖥️  Sistema detectado: $ID $VERSION_ID"
+fi
 
 # Actualizar sistema
 echo "📦 Actualizando sistema..."
@@ -16,23 +23,27 @@ sudo apt update -y && sudo apt upgrade -y
 
 # Instalar dependencias básicas
 echo "🔧 Instalando dependencias básicas..."
-sudo apt install -y curl wget git make vim
+sudo apt install -y curl wget git make vim gpg-agent dirmngr
 
 # Instalar Visual Studio Code
 echo "💻 Instalando Visual Studio Code..."
-# Agregar la clave GPG de Microsoft
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
-sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+# Verificar si ya está instalado
+if ! command -v code &> /dev/null; then
+    # Agregar la clave GPG de Microsoft
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+    sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+    sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
 
-# Actualizar e instalar VS Code
-sudo apt update -y
-sudo apt install -y code
+    # Actualizar e instalar VS Code
+    sudo apt update -y
+    sudo apt install -y code
 
-# Limpiar archivo temporal
-rm -f packages.microsoft.gpg
-
-echo "✅ Visual Studio Code instalado"
+    # Limpiar archivo temporal
+    rm -f packages.microsoft.gpg
+    echo "✅ Visual Studio Code instalado"
+else
+    echo "ℹ️  Visual Studio Code ya está instalado"
+fi
 
 # Instalar Docker
 echo "🐳 Instalando Docker..."

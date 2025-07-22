@@ -1,10 +1,10 @@
 # INSTALACIÓN DE DEPENDENCIAS - PROYECTO INCEPTION
 
-Este directorio contiene scripts para instalar todas las dependencias necesarias para ejecutar el proyecto Inception en Ubuntu 22.04.
+Este directorio contiene scripts para instalar todas las dependencias necesarias para ejecutar el proyecto Inception en Ubuntu 24.04 LTS o 22.04 LTS.
 
 ## 📋 Requisitos
 
-- **Sistema Operativo**: Ubuntu 22.04 LTS (recién instalado)
+- **Sistema Operativo**: Ubuntu 24.04 LTS o 22.04 LTS (recién instalado)
 - **Permisos**: Acceso sudo
 - **Conexión**: Internet estable
 
@@ -164,6 +164,19 @@ sudo chown -R $USER:$USER /home/$USER/data
 chmod -R 755 /home/$USER/data
 ```
 
+### Problemas específicos de Ubuntu 24.04
+```bash
+# Si Docker usa repositorio de Ubuntu 22.04
+# Esto es normal y esperado, no requiere acción
+
+# Verificar compatibilidad de paquetes
+apt list --installed | grep docker
+
+# Si hay conflictos con snapd
+sudo snap remove docker --purge
+sudo apt autoremove
+```
+
 ### Error de Docker Swarm al crear secrets
 ```bash
 # Verificar estado de Docker Swarm
@@ -208,18 +221,20 @@ sudo rm /etc/sudoers.d/$USER
 
 1. **Reinicio obligatorio**: Después de la instalación, DEBES reiniciar tu sesión para que los cambios del grupo docker tengan efecto.
 
-2. **Configuración de sudo**: Los scripts configuran tu usuario para ejecutar comandos sudo sin contraseña. Esto es útil para desarrollo pero considéralo para entornos de producción.
+2. **Compatibilidad**: Los scripts soportan Ubuntu 24.04 LTS y 22.04 LTS. Para Ubuntu 24.04, algunos repositorios pueden usar la versión de Ubuntu 22.04 si no están disponibles específicamente.
 
-3. **Firewall**: Ubuntu 22.04 viene con ufw habilitado por defecto. Si tienes problemas de conectividad, verifica:
+3. **Configuración de sudo**: Los scripts configuran tu usuario para ejecutar comandos sudo sin contraseña. Esto es útil para desarrollo pero considéralo para entornos de producción.
+
+4. **Firewall**: Ubuntu viene con ufw habilitado por defecto. Si tienes problemas de conectividad, verifica:
    ```bash
    sudo ufw status
    sudo ufw allow 443/tcp  # Para HTTPS
    sudo ufw allow 80/tcp   # Para HTTP (si necesario)
    ```
 
-4. **Espacio en disco**: Asegúrate de tener al menos 10GB libres para las imágenes de Docker y el proyecto.
+5. **Espacio en disco**: Asegúrate de tener al menos 10GB libres para las imágenes de Docker y el proyecto.
 
-5. **Memoria RAM**: Se recomienda al menos 2GB de RAM para ejecutar todos los contenedores cómodamente.
+6. **Memoria RAM**: Se recomienda al menos 2GB de RAM para ejecutar todos los contenedores cómodamente.
 
 ## 🆘 Soporte
 
@@ -233,5 +248,5 @@ Si encuentras algún problema:
 ---
 
 **Creado por**: GitHub Copilot  
-**Fecha**: 15 de Julio, 2025  
-**Versión**: 1.0
+**Fecha**: 22 de Julio, 2025  
+**Versión**: 2.0 (Ubuntu 24.04 LTS compatible)

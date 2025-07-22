@@ -4,11 +4,11 @@
 # SCRIPT DE INSTALACIÓN DE DEPENDENCIAS - PROYECTO INCEPTION
 # ==============================================================================
 # Este script instala todas las dependencias necesarias para ejecutar el
-# proyecto Inception en una máquina virtual con Ubuntu 22.04 recién instalado.
+# proyecto Inception en una máquina virtual con Ubuntu 24.04 LTS.
 #
 # Autor: GitHub Copilot
-# Fecha: 15 de Julio, 2025
-# Sistema: Ubuntu 22.04 LTS
+# Fecha: 22 de Julio, 2025
+# Sistema: Ubuntu 24.04 LTS (Compatible también con 22.04)
 # ==============================================================================
 
 set -e  # Salir si cualquier comando falla
@@ -37,16 +37,36 @@ info() {
     echo -e "${BLUE}[INFO] $1${NC}"
 }
 
-# Verificar que estamos en Ubuntu 22.04
+# Verificar que estamos en Ubuntu 24.04 o 22.04
 check_ubuntu_version() {
     log "Verificando versión de Ubuntu..."
     
     if [[ -f /etc/os-release ]]; then
         source /etc/os-release
-        if [[ "$ID" == "ubuntu" && "$VERSION_ID" == "22.04" ]]; then
-            log "✅ Ubuntu 22.04 detectado correctamente"
+        if [[ "$ID" == "ubuntu" ]]; then
+            case "$VERSION_ID" in
+                "24.04")
+                    log "✅ Ubuntu 24.04 LTS detectado correctamente"
+                    UBUNTU_VERSION="24.04"
+                    ;;
+                "22.04")
+                    log "✅ Ubuntu 22.04 LTS detectado correctamente"
+                    UBUNTU_VERSION="22.04"
+                    ;;
+                *)
+                    warning "⚠️  Este script está optimizado para Ubuntu 24.04 LTS y 22.04 LTS"
+                    warning "    Versión actual: $ID $VERSION_ID"
+                    read -p "¿Deseas continuar de todos modos? (y/N): " -n 1 -r
+                    echo
+                    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                        exit 1
+                    fi
+                    UBUNTU_VERSION="$VERSION_ID"
+                    ;;
+            esac
         else
-            warning "⚠️  Este script está diseñado para Ubuntu 22.04. Versión actual: $ID $VERSION_ID"
+            warning "⚠️  Sistema detectado: $ID $VERSION_ID"
+            warning "    Este script está diseñado para Ubuntu 24.04 LTS"
             read -p "¿Deseas continuar de todos modos? (y/N): " -n 1 -r
             echo
             if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -71,21 +91,34 @@ update_system() {
 install_basic_dependencies() {
     log "Instalando dependencias básicas..."
     
-    sudo apt install -y \
-        apt-transport-https \
-        ca-certificates \
-        curl \
-        gnupg \
-        lsb-release \
-        software-properties-common \
-        wget \
-        git \
-        make \
-        vim \
-        net-tools \
-        htop \
-        tree \
+    # Dependencias base comunes
+    BASIC_PACKAGES=(
+        apt-transport-https
+        ca-certificates
+        curl
+        gnupg
+        lsb-release
+        software-properties-common
+        wget
+        git
+        make
+        vim
+        net-tools
+        htop
+        tree
         unzip
+    )
+    
+    # Agregar paquetes específicos para Ubuntu 24.04
+    if [[ "$UBUNTU_VERSION" == "24.04" ]]; then
+        BASIC_PACKAGES+=(
+            gpg-agent
+            dirmngr
+        )
+        log "ℹ️  Agregando paquetes específicos para Ubuntu 24.04"
+    fi
+    
+    sudo apt install -y "${BASIC_PACKAGES[@]}"
     
     log "✅ Dependencias básicas instaladas"
 }
@@ -97,14 +130,32 @@ install_docker() {
     # Remover versiones anteriores de Docker si existen
     sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
     
-    # Agregar la clave GPG oficial de Docker
+    # Crear directorio para keyrings si no existe
     sudo mkdir -p /etc/apt/keyrings
+    
+    # Agregar la clave GPG oficial de Docker
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+    
+    # Detectar la arquitectura
+    ARCH=$(dpkg --print-architecture)
+    
+    # Detectar el codename correcto para el repositorio
+    CODENAME=$(lsb_release -cs)
+    
+    # Para Ubuntu 24.04, usar el repositorio de Ubuntu 22.04 si no está disponible
+    if [[ "$UBUNTU_VERSION" == "24.04" ]]; then
+        # Verificar si existe repositorio específico para 24.04
+        if ! curl -s "https://download.docker.com/linux/ubuntu/dists/$CODENAME/Release" > /dev/null 2>&1; then
+            warning "Repositorio Docker para Ubuntu 24.04 no disponible, usando repositorio de Ubuntu 22.04"
+            CODENAME="jammy"  # Ubuntu 22.04 codename
+        fi
+    fi
     
     # Agregar repositorio de Docker
     echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+        $CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     
     # Actualizar índice de paquetes
     sudo apt update -y
@@ -112,7 +163,7 @@ install_docker() {
     # Instalar Docker Engine
     sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     
-    log "✅ Docker instalado"
+    log "✅ Docker instalado (usando repositorio: $CODENAME)"
 }
 
 # Configurar Docker
@@ -280,21 +331,29 @@ install_development_tools() {
     # Instalar Visual Studio Code
     log "Instalando Visual Studio Code..."
     
-    # Agregar la clave GPG de Microsoft
-    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-    sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
-    
-    # Agregar repositorio de VS Code
-    sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
-    
-    # Actualizar e instalar VS Code
-    sudo apt update -y
-    sudo apt install -y code
-    
-    # Limpiar archivos temporales
-    rm -f packages.microsoft.gpg
-    
-    log "✅ Visual Studio Code instalado"
+    # Verificar si ya está instalado
+    if command -v code &> /dev/null; then
+        log "ℹ️  Visual Studio Code ya está instalado"
+    else
+        # Agregar la clave GPG de Microsoft
+        wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+        sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+        
+        # Detectar arquitectura para VS Code
+        ARCH=$(dpkg --print-architecture)
+        
+        # Agregar repositorio de VS Code con arquitecturas soportadas
+        sudo sh -c "echo 'deb [arch=$ARCH,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main' > /etc/apt/sources.list.d/vscode.list"
+        
+        # Actualizar e instalar VS Code
+        sudo apt update -y
+        sudo apt install -y code
+        
+        # Limpiar archivos temporales
+        rm -f packages.microsoft.gpg
+        
+        log "✅ Visual Studio Code instalado"
+    fi
     log "✅ Herramientas de desarrollo instaladas"
 }
 
@@ -356,6 +415,7 @@ show_final_info() {
     info "                    INFORMACIÓN IMPORTANTE"
     info "═══════════════════════════════════════════════════════════════════"
     echo
+    info "🖥️  Sistema: Ubuntu $UBUNTU_VERSION LTS"
     info "✅ Docker y Docker Compose han sido instalados"
     info "✅ Docker Swarm inicializado"
     info "✅ Visual Studio Code instalado"
