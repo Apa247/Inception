@@ -419,12 +419,12 @@ alias c='code'
 alias c.='code .'
 
 # Aliases para el proyecto Inception
-alias inception-up='cd ~/campus42/proyectos/inception/inceptio_apa && make up'
-alias inception-down='cd ~/campus42/proyectos/inception/inceptio_apa && make down'
-alias inception-logs='cd ~/campus42/proyectos/inception/inceptio_apa && make logs'
-alias inception-clean='cd ~/campus42/proyectos/inception/inceptio_apa && make clean'
-alias inception-status='cd ~/campus42/proyectos/inception/inceptio_apa && make ps'
-alias inception-code='cd ~/campus42/proyectos/inception/inceptio_apa && code .'
+alias inception-up='cd ~/campus42/proyectos/inception/apa && make up'
+alias inception-down='cd ~/campus42/proyectos/inception/apa && make down'
+alias inception-logs='cd ~/campus42/proyectos/inception/apa && make logs'
+alias inception-clean='cd ~/campus42/proyectos/inception/apa && make clean'
+alias inception-status='cd ~/campus42/proyectos/inception/apa && make ps'
+alias inception-code='cd ~/campus42/proyectos/inception/apa && code .'
 EOF
     
     log "✅ Aliases creados en $ALIASES_FILE"

@@ -6,14 +6,14 @@
 #    By: daparici <daparici@student.42madrid.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/12 15:15:11 by daparici          #+#    #+#              #
-#    Updated: 2025/07/13 17:10:29 by daparici         ###   ########.fr        #
+#    Updated: 2025/07/23 20:23:22 by daparici         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 SHELL := /bin/bash
 COMPOSE = docker compose
 DOCKER = docker
-SRC_DIR = ./src
+SRC_DIR = ./srcs
 PROJECT_NAME := inception
 DATA_DIR = /home/daparici/data
 SECRETS_DIR = ./secrets
