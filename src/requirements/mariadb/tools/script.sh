@@ -35,6 +35,7 @@ chmod 777 /run/mysqld # Give broad permissions for testing
 
 # Start MariaDB in the background
 /usr/sbin/mariadbd --user=mysql &
+MARIADB_PID=$!
 
 # Espera a que MariaDB acepte conexiones
 until mysqladmin ping -u root -p"$DB_ROOT_PWD" --silent; do
@@ -50,10 +51,10 @@ done
 
 # Initialize the database
 mysql -u root -p"$DB_ROOT_PWD" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-mysql -u root -p"$DB_ROOT_PWD" -e "CREATE USER IF NOT EXISTS '$DB_USER' IDENTIFIED BY '$DB_USER_PWD';"
-mysql -u root -p"$DB_ROOT_PWD" -e "CREATE USER IF NOT EXISTS '$DB_MASTER_USER' IDENTIFIED BY '$DB_MASTER_PWD';"
-mysql -u root -p"$DB_ROOT_PWD" -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, INDEX, LOCK TABLES, EXECUTE ON $DB_NAME.* TO '$DB_USER';"
-mysql -u root -p"$DB_ROOT_PWD" -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_MASTER_USER';"
+mysql -u root -p"$DB_ROOT_PWD" -e "CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_USER_PWD';"
+mysql -u root -p"$DB_ROOT_PWD" -e "CREATE USER IF NOT EXISTS '$DB_MASTER_USER'@'%' IDENTIFIED BY '$DB_MASTER_PWD';"
+mysql -u root -p"$DB_ROOT_PWD" -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, INDEX, LOCK TABLES, EXECUTE ON $DB_NAME.* TO '$DB_USER'@'%';"
+mysql -u root -p"$DB_ROOT_PWD" -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_MASTER_USER'@'%';"
 mysql -u root -p"$DB_ROOT_PWD" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$DB_ROOT_PWD' WITH GRANT OPTION;"
 mysql -u root -p"$DB_ROOT_PWD" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' IDENTIFIED BY '$DB_ROOT_PWD' WITH GRANT OPTION;"
 mysql -u root -p"$DB_ROOT_PWD" -e "FLUSH PRIVILEGES;"
@@ -61,4 +62,4 @@ mysql -u root -p"$DB_ROOT_PWD" -e "FLUSH PRIVILEGES;"
 echo "MariaDB initialization complete."
 
 # Keep the container running
-exec /usr/sbin/mariadbd --user=mysql
+wait $MARIADB_PID 
