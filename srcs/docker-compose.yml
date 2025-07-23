@@ -16,7 +16,7 @@ services:
 
   wordpress:
     container_name: wp-php
-    image: wp-php
+    image: wordpress
     build: ./requirements/wordpress
     volumes:
       - web_volumen:/var/www/html
