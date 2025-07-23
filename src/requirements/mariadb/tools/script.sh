@@ -61,4 +61,4 @@ mysql -u root -p"$DB_ROOT_PWD" -e "FLUSH PRIVILEGES;"
 echo "MariaDB initialization complete."
 
 # Keep the container running
-tail -f /dev/null
+exec /usr/sbin/mariadbd --user=mysql
