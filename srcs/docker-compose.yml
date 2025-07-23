@@ -15,7 +15,7 @@ services:
       - inception
 
   wordpress:
-    container_name: wp-php
+    container_name: wordpress
     image: wordpress
     build: ./requirements/wordpress
     volumes:
