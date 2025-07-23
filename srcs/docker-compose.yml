@@ -1,27 +1,27 @@
 services:
-  nginx:
+  nginx_service:
     container_name: nginx
-    image: nginx
+    image: nginx_service
     build: ./requirements/nginx
     ports:
       - "443:443"
     volumes:
       - web_volumen:/var/www/html
     depends_on:
-      wordpress:
+      wordpress_service:
         condition: service_healthy
     restart: always
     networks:
       - inception
 
-  wordpress:
+  wordpress_service:
     container_name: wordpress
-    image: wordpress
+    image: wordpress_service
     build: ./requirements/wordpress
     volumes:
       - web_volumen:/var/www/html
     depends_on:
-      maria_db:
+      mariadb_service:
         condition: service_healthy
     healthcheck:
       test: pgrep php-fpm7.4
@@ -58,9 +58,9 @@ services:
     networks:
       - inception
 
-  maria_db:
+  mariadb_service:
     container_name: mariadb
-    image: maria_db
+    image: mariadb_service
     build: ./requirements/mariadb
     volumes:
       - Mariadb_volumen:/var/lib/mysql
