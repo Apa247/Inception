@@ -130,14 +130,9 @@ ls -la /home/daparici/campus42/proyectos/inception/apa/srcs/requirements/nginx/D
 #### 2. **Verificar contenedor creado**
 ```bash
 cd /home/daparici/campus42/proyectos/inception/apa
-# Opción 1: Usar Makefile (Recomendado)
-make ps
-
-# Opción 2: Docker compose desde directorio srcs
-cd srcs && docker compose ps
-
-# Opción 3: Docker compose con flag -f
-docker compose -f srcs/docker-compose.yml ps
+docker compose ps
+# o con flag -p si es necesario:
+docker compose -p inception ps
 ```
 **✅ RESPUESTA**: Debe mostrar contenedor `nginx` en estado `running`
 
@@ -282,17 +277,11 @@ make up
 
 ### **Verificación de estado:**
 ```bash
-# Ver contenedores activos (desde directorio raíz)
-cd /home/daparici/campus42/proyectos/inception/apa
-make ps
-
-# O desde directorio srcs
-cd /home/daparici/campus42/proyectos/inception/apa/srcs
+# Ver contenedores activos
 docker compose ps
 
 # Ver logs
-cd /home/daparici/campus42/proyectos/inception/apa
-make logs
+docker compose logs
 
 # Ver procesos en contenedores
 docker stats
