@@ -6,7 +6,7 @@
 #    By: daparici <daparici@student.42madrid.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/12 15:15:11 by daparici          #+#    #+#              #
-#    Updated: 2025/07/23 20:23:22 by daparici         ###   ########.fr        #
+#    Updated: 2025/07/23 23:17:30 by daparici         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -85,7 +85,13 @@ clean:
 .PHONY: fclean
 fclean: clean
 	docker secret rm $(SECRET_NAMES) 2>/dev/null || true
-	# Remove secrets, ignore errors if they don't exist
+	docker volume rm srcs_Mariadb_volumen srcs_web_volumen 2>/dev/null || true
+	# Remove secrets and project volumes, ignore errors if they don't exist
+
+.PHONY: clean-volumes
+clean-volumes:
+	$(COMPOSE) -f $(SRC_DIR)/docker-compose.yml down -v
+	docker volume rm srcs_Mariadb_volumen srcs_web_volumen 2>/dev/null || true
 
 .PHONY: logs
 logs:
