@@ -60,7 +60,7 @@ services:
 
   maria_db:
     container_name: mariadb
-    image: mariadb
+    image: maria_db
     build: ./requirements/mariadb
     volumes:
       - Mariadb_volumen:/var/lib/mysql
