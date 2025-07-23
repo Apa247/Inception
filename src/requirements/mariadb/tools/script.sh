@@ -31,35 +31,57 @@ chown -R mysql:mysql /var/lib/mysql
 # Explicitly create the socket directory and set permissions
 mkdir -p /run/mysqld
 chown mysql:mysql /run/mysqld
-chmod 777 /run/mysqld # Give broad permissions for testing
 
-# Start MariaDB in the background
-/usr/sbin/mariadbd --user=mysql &
-MARIADB_PID=$!
+# Verificar si la base de datos necesita inicialización
+echo "DEBUG - Verificando directorio: /var/lib/mysql/mysql"
+ls -la /var/lib/mysql/ || echo "Directorio /var/lib/mysql/ no existe"
 
-# Espera a que MariaDB acepte conexiones
-until mysqladmin ping -u root -p"$DB_ROOT_PWD" --silent; do
-  echo "Waiting for MariaDB to be ready..."
-  sleep 2
-done
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+    echo "Inicializando base de datos MariaDB..."
+    
+    # Instalar base de datos inicial
+    mysql_install_db --user=mysql --datadir=/var/lib/mysql
+    
+    # Configurar base de datos usando bootstrap (sin daemon)
+    /usr/sbin/mariadbd --user=mysql --bootstrap <<EOF
+USE mysql;
+FLUSH PRIVILEGES;
 
-# Wait for MariaDB to be ready
-while [ ! -S /var/run/mysqld/mysqld.sock ]; do
-  echo "Waiting for MariaDB socket..."
-  sleep 2
-done
+-- Configurar contraseña de root (SOLO en inicialización)
+ALTER USER 'root'@'localhost' IDENTIFIED BY '$DB_ROOT_PWD';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$DB_ROOT_PWD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' IDENTIFIED BY '$DB_ROOT_PWD' WITH GRANT OPTION;
 
-# Initialize the database
-mysql -u root -p"$DB_ROOT_PWD" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-mysql -u root -p"$DB_ROOT_PWD" -e "CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_USER_PWD';"
-mysql -u root -p"$DB_ROOT_PWD" -e "CREATE USER IF NOT EXISTS '$DB_MASTER_USER'@'%' IDENTIFIED BY '$DB_MASTER_PWD';"
-mysql -u root -p"$DB_ROOT_PWD" -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, INDEX, LOCK TABLES, EXECUTE ON $DB_NAME.* TO '$DB_USER'@'%';"
-mysql -u root -p"$DB_ROOT_PWD" -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_MASTER_USER'@'%';"
-mysql -u root -p"$DB_ROOT_PWD" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$DB_ROOT_PWD' WITH GRANT OPTION;"
-mysql -u root -p"$DB_ROOT_PWD" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' IDENTIFIED BY '$DB_ROOT_PWD' WITH GRANT OPTION;"
-mysql -u root -p"$DB_ROOT_PWD" -e "FLUSH PRIVILEGES;"
+FLUSH PRIVILEGES;
+EOF
+    
+    echo "MariaDB initialization complete."
+fi
 
-echo "MariaDB initialization complete."
+# ✅ CONFIGURACIÓN COMÚN (se ejecuta SIEMPRE)
+echo "Configurando base de datos y usuarios..."
 
-# Keep the container running
-wait $MARIADB_PID 
+/usr/sbin/mariadbd --user=mysql --bootstrap <<EOF
+USE mysql;
+FLUSH PRIVILEGES;
+
+-- Crear base de datos si no existe
+CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- Crear usuarios remotos si no existen  
+CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_USER_PWD';
+CREATE USER IF NOT EXISTS '$DB_MASTER_USER'@'%' IDENTIFIED BY '$DB_MASTER_PWD';
+
+-- Asignar permisos remotos
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, INDEX, LOCK TABLES, EXECUTE ON $DB_NAME.* TO '$DB_USER'@'%';
+GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_MASTER_USER'@'%';
+
+FLUSH PRIVILEGES;
+EOF
+
+echo "Configuración de base de datos y usuarios completada."
+
+echo "Iniciando servidor MariaDB..."
+
+# Iniciar MariaDB como proceso principal (CUMPLE TODAS LAS REGLAS)
+exec /usr/sbin/mariadbd --user=mysql --bind-address=0.0.0.0
