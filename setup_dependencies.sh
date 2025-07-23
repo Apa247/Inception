@@ -288,6 +288,30 @@ setup_project_directories() {
     log "✅ Directorios del proyecto configurados"
 }
 
+# Configurar dominio local
+configure_local_domain() {
+    log "Configurando dominio local..."
+    
+    DOMAIN="$USER.42.fr"
+    
+    # Verificar si el dominio ya está configurado
+    if grep -q "$DOMAIN" /etc/hosts; then
+        log "ℹ️  Dominio $DOMAIN ya está configurado en /etc/hosts"
+    else
+        # Añadir dominio al archivo hosts
+        echo "127.0.0.1 $DOMAIN" | sudo tee -a /etc/hosts > /dev/null
+        log "✅ Dominio $DOMAIN añadido a /etc/hosts"
+    fi
+    
+    # Verificar la configuración
+    if grep -q "127.0.0.1.*$DOMAIN" /etc/hosts; then
+        log "✅ Dominio $DOMAIN configurado correctamente"
+        info "🌐 Tu sitio estará disponible en: https://$DOMAIN"
+    else
+        warning "⚠️  Error al configurar el dominio $DOMAIN"
+    fi
+}
+
 # Configurar sudo sin contraseña
 configure_sudo_nopasswd() {
     log "Configurando sudo sin contraseña para el usuario actual..."
@@ -422,6 +446,7 @@ show_final_info() {
     info "✅ Usuario agregado al grupo docker"
     info "✅ Sudo sin contraseña configurado"
     info "✅ Directorios del proyecto configurados"
+    info "✅ Dominio local $USER.42.fr configurado"
     info "✅ Aliases útiles creados"
     echo
     warning "⚠️  IMPORTANTE: Necesitas reiniciar tu sesión (logout/login) o ejecutar:"
@@ -429,6 +454,7 @@ show_final_info() {
     warning "   Para que los cambios del grupo docker tengan efecto"
     echo
     info "📁 Directorio de datos del proyecto: /home/$USER/data"
+    info "🌐 Tu sitio web estará disponible en: https://$USER.42.fr"
     info "🔗 Aliases disponibles después de reiniciar:"
     info "   - inception-up    : Levantar el proyecto"
     info "   - inception-down  : Parar el proyecto"
@@ -462,6 +488,7 @@ main() {
     install_docker_compose
     verify_installation
     setup_project_directories
+    configure_local_domain
     configure_sudo_nopasswd
     install_additional_tools
     create_useful_aliases
