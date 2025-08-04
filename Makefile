@@ -6,7 +6,7 @@
 #    By: daparici <daparici@student.42madrid.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/12 15:15:11 by daparici          #+#    #+#              #
-#    Updated: 2025/07/23 23:17:30 by daparici         ###   ########.fr        #
+#    Updated: 2025/08/04 16:39:23 by daparici         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -85,8 +85,12 @@ clean:
 .PHONY: fclean
 fclean: clean
 	docker secret rm $(SECRET_NAMES) 2>/dev/null || true
-	docker volume rm srcs_Mariadb_volumen srcs_web_volumen 2>/dev/null || true
-	# Remove secrets and project volumes, ignore errors if they don't exist
+	docker stop $$(docker ps -qa) 2>/dev/null || true
+	docker rm $$(docker ps -qa) 2>/dev/null || true
+	docker rmi -f $$(docker images -qa) 2>/dev/null || true
+	docker volume rm $$(docker volume ls -q) 2>/dev/null || true
+	docker network rm $$(docker network ls -q) 2>/dev/null || true
+	# Complete Docker cleanup: stop all containers, remove all containers, images, volumes, and networks
 
 .PHONY: clean-volumes
 clean-volumes:
